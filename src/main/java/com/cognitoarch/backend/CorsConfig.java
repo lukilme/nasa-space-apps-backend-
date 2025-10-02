@@ -14,14 +14,12 @@ public class CorsConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        // Se quiser permitir múltiplas origens em dev, use addAllowedOriginPattern
         config.addAllowedOriginPattern("http://127.0.0.1:*");
-        // Ou explicitamente:
-        // config.setAllowedOrigins(List.of("http://127.0.0.1:5500", "http://127.0.0.1:8000"));
+
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
-        config.setExposedHeaders(List.of("Content-Type"));  // se quiser expor algum cabeçalho
+        config.setExposedHeaders(List.of("Content-Type")); 
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
