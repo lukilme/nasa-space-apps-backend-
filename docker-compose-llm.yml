@@ -1,0 +1,66 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_core
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./entrypoint.sh:/entrypoint.sh
+    networks:
+      - streamnet
+    restart: unless-stopped
+    entrypoint: [ "/entrypoint.sh" ]
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "curl -sf http://localhost:11434/v1/models || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  postgres-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - streamnet
+
+  python:
+    build: ./python
+    container_name: python-llm
+    ports:
+      - '5000:5000'
+    networks:
+      - streamnet
+
+  springboot-app:
+    image: maven:3.9.6-eclipse-temurin-21
+    ports:
+      - "8082:8080"
+      - "5005:5005"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/mydb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      PYTHON_BASE_URL: http://python:5000
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: mvn spring-boot:run
+    depends_on:
+      - python
+      - postgres-db
+    networks:
+      - streamnet
+
+volumes:
+  postgres_data:
+  ollama_data:
+networks:
+  streamnet:
+    driver: bridge

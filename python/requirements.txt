@@ -1,0 +1,5 @@
+fastapi
+uvicorn[standard]
+httpx
+kafka-python
+psycopg2-binary
